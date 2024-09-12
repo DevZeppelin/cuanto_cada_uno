@@ -1,101 +1,154 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useState } from 'react';
+
+export default function App() {
+  const [numPeople, setNumPeople] = useState(0);
+  const [items, setItems] = useState([]);
+  const [newItem, setNewItem] = useState({ name: '', cost: 0, paidBy: '' });
+  const [balances, setBalances] = useState([]);
+  const [amountPerPerson, setAmountPerPerson] = useState(0);
+
+  // Manejar cambios en los inputs
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setNewItem({ ...newItem, [name]: value });
+  };
+
+  // Agregar un nuevo item
+  const addItem = () => {
+    setItems([...items, newItem]);
+    setNewItem({ name: '', cost: 0, paidBy: '' }); // Reiniciar los campos
+  };
+
+  // Calcular el total sumando los costos de todos los items
+  const calculateTotal = () => {
+    return items.reduce((acc, item) => acc + parseFloat(item.cost), 0);
+  };
+
+  // Calcular cuánto debe cada persona y quién tiene saldo a favor
+  const calculate = () => {
+    const total = calculateTotal();
+    const perPerson = total / numPeople;
+    setAmountPerPerson(perPerson);
+    let people = {};
+
+    // Inicializar cuánto pagó cada persona
+    items.forEach((item) => {
+      if (!people[item.paidBy]) {
+        people[item.paidBy] = 0;
+      }
+      people[item.paidBy] += parseFloat(item.cost);
+    });
+
+    const results = [];
+    Object.keys(people).forEach((person) => {
+      const balance = people[person] - perPerson;
+      if (balance > 0) {
+        results.push(`A ${person} tienen que darle $ ${balance.toFixed(2)}`);
+      } else if (balance < 0) {
+        results.push(`${person} tiene que poner $ ${Math.abs(balance).toFixed(2)}`);
+      } else {
+        results.push(`${person} sale derecho`);
+      }
+    });
+
+    setBalances(results);  // Actualiza el estado con los balances
+  };
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.js
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+    <div className="flex flex-col p-6 text-center">
+      <h1 className="text-2xl font-bold mb-4 p-6 uppercase">¿Cuanto cada uno?</h1>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+      {/* Número de personas */}
+      <div className="mb-4">
+        <label className="block mb-2">Cantidad de personas:</label>
+        <input
+          type="number"
+          value={numPeople}
+          onChange={(e) => setNumPeople(parseInt(e.target.value))}
+          className="border p-2 w-60 text-black text-center rounded-xl"
+        />
+      </div>
+
+      
+
+      {/* Nuevo item */}
+      <div className="mb-4 flex flex-col w-80 mx-auto text-black text-center">
+        <input
+          type="text"
+          name="name"
+          placeholder="Nombre del item"
+          value={newItem.name}
+          onChange={handleInputChange}
+          className="border p-2 m-1 rounded-md"
+        />
+        <input
+          type="number"
+          name="cost"
+          placeholder="Costo"
+          value={newItem.cost}
+          onChange={handleInputChange}
+          className="border p-2 m-1 rounded-md"
+        />
+        <input
+          type="text"
+          name="paidBy"
+          placeholder="Pagado por"
+          value={newItem.paidBy}
+          onChange={handleInputChange}
+          className="border p-2 m-1 mb-2 rounded-md"
+        />
+        <button
+          onClick={addItem}
+          className="bg-blue-500 text-white p-4 rounded-lg"
         >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+          Agregar item
+        </button>
+      </div>
+
+      {/* Items */}
+      <div className="mb-4">
+        <h2 className="text-xl font-semibold mb-2">Items comprados:</h2>
+        {items.map((item, index) => (
+          <div key={index} className="flex gap-4 mx-auto justify-center border p-2 mb-2 w-72 rounded-2xl">
+            <p>{item.name}</p>
+            <p>{item.cost}</p>
+            <p><b>Lo pagó:</b> {item.paidBy}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Botón para finalizar */}
+      <button
+        onClick={calculate}
+        className="bg-green-500 text-white p-4 rounded-xl m-4 w-80 mx-auto uppercase font-bold"
+      >
+        Calcular
+      </button>
+
+      {/* Mostrar total gastado */}
+      <div className="mt-4">
+        <h3 className="text-xl font-semibold mb-4">Total gastado: ${calculateTotal().toFixed(2)}</h3>
+        {amountPerPerson ? (
+          <h3 className="text-xl font-semibold">Cada uno es: ${amountPerPerson.toFixed(2)}</h3>
+        ) : <p></p>}
+      </div>
+
+
+
+
+      {/* Mostrar balances */}
+      <div className="mt-12">
+        <h3 className="text-xl font-semibold">Balances:</h3>
+        {balances.length > 0 ? (
+          balances.map((balance, index) => (
+            <p className='p-2' key={index}>{balance}</p>
+          ))
+        ) : (
+          <p>No se han calculado balances aún.</p>
+        )}
+      </div>
     </div>
   );
 }
