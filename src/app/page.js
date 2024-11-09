@@ -42,7 +42,7 @@ export default function App() {
   // Calcular cuánto debe cada persona y quién tiene saldo a favor
   const calculate = () => {
 
-    if (numPeople <= 0) {
+    if (numPeople <= 0 || !numPeople ) {
       alert("Por favor, ingresa el numero de personas en las que se dividira la cuenta.");
       return; // Detener la función si algún campo está vacío o el costo es 0 o negativo
     }
@@ -221,18 +221,20 @@ export default function App() {
                   {record.balances.map((balance, idx) => (
                     <p key={idx}>- {balance}</p>
                   ))}
-                 
                 </div>
               ))
             ) : (
               <p>No hay historial de cuentas.</p>
             )}
             <div>
-              {showHistory &&  <MdDelete
-                    className="text-4xl mx-auto m-2 "
-                    onClick={borrarHistorial}
-                  />}
-
+              {history.length > 0 ? (
+                <MdDelete
+                  className="text-4xl mx-auto m-2 "
+                  onClick={borrarHistorial}
+                />
+              ) : (
+                ""
+              )}
             </div>
           </div>
         )}
